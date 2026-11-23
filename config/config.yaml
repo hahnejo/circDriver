@@ -1,0 +1,29 @@
+# Pipeline Configuration for GSE236932 circRNA Hypoxia Driver Discovery
+dataset_id: "GSE236932"
+
+raw_data:
+  circ_counts: "Data/GSE236932_circ_countmatrix.tsv.gz"
+  mrna_counts: "Data/GSE236932_mRNA_countmatrix.csv.gz"
+
+target_signature: "Hypoxia_Buffa"
+
+filtering:
+  min_circ_log2cpm: 1.0
+  min_circ_samples: 19       # ~30% of n=63 samples
+  min_mrna_log2: 1.0
+  min_mrna_samples: 20
+
+model:
+  n_folds: 5
+  k_best: 50
+  l1_ratios: [0.3, 0.5, 0.7, 0.9]
+  random_state: 42
+  min_selection_freq: 0.6
+
+cerna:
+  lead_circrna: "chr5:38523419|38530666"   # hsa_circ_0072309 (circLIFR)
+  secondary_circrna: "chr18:6213149|6312056" # circL3MBTL4
+  lead_partner: "HIF3A"
+  mediator_proxy: "MIR205HG"
+  fdr_alpha: 0.01
+  n_permutations: 10000
