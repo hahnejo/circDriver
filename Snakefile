@@ -55,11 +55,11 @@ rule mechanistic_dissection:
         preds=rules.train_elasticnet.output.preds,
         drivers=rules.train_elasticnet.output.drivers
     output:
-        cache="Processed/coord_to_gene_cache.json",
         fig_cv=f"Processed/{DATA_ID}_Hypoxia_ElasticNet_Results.png",
         fig_heat=f"Processed/{DATA_ID}_circRNA_vs_Hypoxia_Genes_Heatmap.png",
         indep=f"Processed/{DATA_ID}_host_independence_check.csv"
     params:
+        cache="Processed/coord_to_gene_cache.json",
         min_freq=config["model"]["min_selection_freq"],
         lead_circ=config["cerna"]["lead_circrna"]
     conda:
