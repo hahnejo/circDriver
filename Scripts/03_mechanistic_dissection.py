@@ -8,7 +8,7 @@ import matplotlib
 matplotlib.use("Agg")  # Headless-safe backend for CLI/Snakemake execution
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import spearmanr, pearsonr
+from scipy.stats import spearmanr
 from sklearn.metrics import r2_score
 
 if "snakemake" in globals():
@@ -18,7 +18,7 @@ if "snakemake" in globals():
     sigs_path = snakemake.input.sigs
     preds_path = snakemake.input.preds
     drivers_path = snakemake.input.drivers
-    out_cache = snakemake.output.cache
+    out_cache = snakemake.params.cache
     out_fig_cv = snakemake.output.fig_cv
     out_fig_heat = snakemake.output.fig_heat
     out_indep = snakemake.output.indep
@@ -51,36 +51,74 @@ sample_cols = scores_df.index.tolist()
 X_circ_logcpm = X_circ_logcpm[sample_cols]
 mrna_log2 = mrna_log2[sample_cols]
 
-# 1. Rate-limit safe Ensembl REST gene mapper with local JSON cache
+# 1. Persistent cache + Multi-provider GRCh38 gene mapper (Ensembl -> MyGene.info -> UCSC)
 cache_file = Path(out_cache)
 gene_cache = json.load(open(cache_file)) if cache_file.exists() else {}
 
 session = requests.Session()
-session.headers.update({"Content-Type": "application/json", "User-Agent": "circDriver-Mapper/1.0"})
+session.headers.update({"Accept": "application/json", "User-Agent": "circDriver-Mapper/2.0"})
 
-def map_coords_to_gene(coord_str, max_retries=4):
-    if coord_str in gene_cache and gene_cache[coord_str] != "Unknown":
-        return gene_cache[coord_str]
-    chrom, pos = coord_str.split(":")
-    chrom = chrom.replace("chr", "")
-    start, end = pos.split("|")
+def query_ensembl(chrom, start, end, retries=3, timeout=30):
     url = f"https://rest.ensembl.org/overlap/region/human/{chrom}:{start}-{end}?feature=gene"
-    for attempt in range(max_retries):
+    for attempt in range(retries):
         try:
-            r = session.get(url, timeout=10)
+            r = session.get(url, timeout=timeout)
             if r.status_code == 200:
                 genes = [g.get("external_name") for g in r.json() if g.get("external_name")]
-                res = ",".join(dict.fromkeys(genes)) if genes else "Intergenic"
-                gene_cache[coord_str] = res
-                time.sleep(0.15)
-                return res
+                return ",".join(dict.fromkeys(genes)) if genes else "Intergenic"
             elif r.status_code == 429:
                 time.sleep(float(r.headers.get("Retry-After", 2.0)))
             else:
-                time.sleep(1.0)
+                time.sleep(1.5 * (attempt + 1))
         except requests.RequestException:
             time.sleep(1.5 * (attempt + 1))
-    return "Unknown"
+    return None
+
+def query_mygene(chrom, start, end, timeout=20):
+    url = f"https://mygene.info/v3/query?q=chr{chrom}:{start}-{end}&species=human&fields=symbol,type_of_gene&size=50"
+    try:
+        r = session.get(url, timeout=timeout)
+        if r.status_code == 200:
+            hits = r.json().get("hits", [])
+            coding = [h["symbol"] for h in hits if h.get("symbol") and h.get("type_of_gene") == "protein-coding"]
+            all_syms = [h["symbol"] for h in hits if h.get("symbol")]
+            genes = coding if coding else all_syms
+            return ",".join(dict.fromkeys(genes)) if genes else "Intergenic"
+    except requests.RequestException:
+        pass
+    return None
+
+def query_ucsc(chrom, start, end, timeout=20):
+    url = f"https://api.genome.ucsc.edu/getData/track?genome=hg38;track=ncbiRefSeqCurated;chrom=chr{chrom};start={start};end={end}"
+    try:
+        r = session.get(url, timeout=timeout)
+        if r.status_code == 200:
+            items = r.json().get("ncbiRefSeqCurated", [])
+            genes = [item.get("name2") for item in items if item.get("name2")]
+            return ",".join(dict.fromkeys(genes)) if genes else "Intergenic"
+    except requests.RequestException:
+        pass
+    return None
+
+def map_coords_to_gene(coord_str):
+    cached = gene_cache.get(coord_str)
+    if cached and cached != "Unknown":
+        return cached
+
+    chrom, pos = coord_str.split(":")
+    chrom_clean = chrom.replace("chr", "")
+    start, end = pos.split("|")
+
+    # Try Ensembl first, then MyGene.info, then UCSC Genome Browser
+    for provider_name, fn in [("Ensembl", query_ensembl), ("MyGene.info", query_mygene), ("UCSC", query_ucsc)]:
+        res = fn(chrom_clean, start, end)
+        if res is not None:
+            gene_cache[coord_str] = res
+            time.sleep(0.15)
+            return res
+        print(f"[03_mechanistic_dissection] {provider_name} timed out for {coord_str}, trying fallback...")
+
+    raise RuntimeError(f"All annotation APIs failed for {coord_str}. Check internet connection and re-run.")
 
 top_neg_ids = summary_circ[summary_circ["Selection_Freq"] >= min_freq].index.tolist()
 top_pos_ids = summary_circ[summary_circ["Mean_Coef"] > 0].index.tolist()
@@ -88,6 +126,7 @@ selected_circ_ids = top_neg_ids + top_pos_ids
 
 for cid in selected_circ_ids:
     map_coords_to_gene(cid)
+
 with open(cache_file, "w") as f:
     json.dump(gene_cache, f, indent=2)
 
