@@ -9,7 +9,8 @@ rule all:
         f"Processed/{DATA_ID}_circRNA_vs_Hypoxia_Genes_Heatmap.png",
         f"Processed/{DATA_ID}_host_independence_check.csv",
         f"Processed/{DATA_ID}_circLIFR_ceRNA_partners.csv",
-        f"Processed/{DATA_ID}_cerna_triangulation_summary.csv"
+        f"Processed/{DATA_ID}_cerna_triangulation_summary.csv",
+        f"Processed/{DATA_ID}_ceRNA_Triangulation.png"
 
 rule preprocess:
     input:
@@ -91,7 +92,8 @@ rule cerna_triangulation:
         scores=rules.preprocess.output.scores,
         lifr_partners=rules.cerna_partner_screen.output.lifr_partners
     output:
-        summary=f"Processed/{DATA_ID}_cerna_triangulation_summary.csv"
+        summary=f"Processed/{DATA_ID}_cerna_triangulation_summary.csv",
+        fig_cerna=f"Processed/{DATA_ID}_ceRNA_Triangulation.png"
     params:
         lead_circ=config["cerna"]["lead_circrna"],
         partner=config["cerna"]["lead_partner"],
