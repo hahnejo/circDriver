@@ -222,8 +222,8 @@ if partner_gene in quad_df.index:
 # Clean non-overlapping gene callouts
 callout_offsets = {
     "HIF3A":    (0.67, -0.58),
-    "LIFR-AS1": (0.64, -0.78),
-    "GAS1":     (0.20, -0.72),
+    "LIFR-AS1": (0.30, -0.82),
+    "GAS1":     (0.20, -0.71),
     "SCARA5":   (0.67, -0.43),
 }
 for gene, (tx, ty) in callout_offsets.items():
