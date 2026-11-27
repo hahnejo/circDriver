@@ -24,7 +24,7 @@ To test whether circRNA expression alone predicts tumor hypoxia without data lea
 * **Generalization Performance:** Out-of-fold predictions tracked actual Buffa hypoxia scores blindly with **$R^2 = 0.333$**, **Spearman $\rho = 0.601$ ($p = 1.92 \times 10^{-7}$)**, **Pearson $r = 0.587$ ($p = 4.32 \times 10^{-7}$)**, and **$\text{MAE} = 0.361$**.
 * **Lead Candidates:** Ranking features by cross-fold selection stability prioritized two predominantly silenced ("loss-of-brake") drivers: **`circL3MBTL4`** (`chr18:6213149|6312056`, selected in $5/5$ folds, mean $\text{coef} = -0.0793$) and **`circLIFR` / `hsa_circ_0072309`** (`chr5:38523419|38530666`, selected in $4/5$ folds, strongest weight magnitude $\text{coef} = -0.0857$, direct $\rho = -0.507, p = 2.25 \times 10^{-5}$).
 
-<!-- ![ElasticNet Out-of-Fold Prediction and circLIFR Silencing](Processed/GSE236932_Hypoxia_ElasticNet_Results.png) -->
+![ElasticNet Out-of-Fold Prediction and circLIFR Silencing](Processed/GSE236932_Hypoxia_ElasticNet_Results.png)
 
 ### Stage 03 (`03_mechanistic_dissection.py`): Host-Gene Independence & Effector Mapping
 A core confounder in circRNA biology is transcriptional hitchhiking—a circRNA may appear hypoxia-linked purely because its linear parent gene is co-regulated. Using a resilient multi-provider GRCh38 annotator (`Ensembl` $\rightarrow$ `MyGene.info` $\rightarrow$ `UCSC` with persistent local caching), all top ElasticNet loci were mapped to host genes and evaluated via **partial Spearman correlation** controlling for linear host mRNA abundance:
