@@ -22,20 +22,28 @@
     "FN1",
     "SNAI1",
     "SNAI2",
+    "TWIST1",
     "ZEB1",
     "ZEB2",
-    "TWIST1",
     "MMP2",
-    "MMP9"
+    "MMP9",
+    "COL1A1",
+    "COL3A1",
+    "TGFB1",
+    "SPARC"
   ],
   "Immune_Exhaustion_TME": [
-    "PDCD1",
     "CD274",
+    "PDCD1",
     "CTLA4",
     "LAG3",
     "HAVCR2",
     "TIGIT",
-    "TOX",
-    "FOXP3"
+    "IDO1",
+    "TGFB1",
+    "IL10",
+    "FOXP3",
+    "CCL2",
+    "CXCL8"
   ]
 }
