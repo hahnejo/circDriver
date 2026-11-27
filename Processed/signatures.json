@@ -1,0 +1,49 @@
+{
+  "Hypoxia_Buffa": [
+    "VEGFA",
+    "SLC2A1",
+    "PGAM1",
+    "ENO1",
+    "LDHA",
+    "TPI1",
+    "ALDOA",
+    "PGK1",
+    "GPI",
+    "P4HA1",
+    "MRPS17",
+    "CDKN3",
+    "ADM",
+    "NDRG1",
+    "TUBB6"
+  ],
+  "EMT_Invasion": [
+    "VIM",
+    "CDH2",
+    "FN1",
+    "SNAI1",
+    "SNAI2",
+    "TWIST1",
+    "ZEB1",
+    "ZEB2",
+    "MMP2",
+    "MMP9",
+    "COL1A1",
+    "COL3A1",
+    "TGFB1",
+    "SPARC"
+  ],
+  "Immune_Exhaustion_TME": [
+    "CD274",
+    "PDCD1",
+    "CTLA4",
+    "LAG3",
+    "HAVCR2",
+    "TIGIT",
+    "IDO1",
+    "TGFB1",
+    "IL10",
+    "FOXP3",
+    "CCL2",
+    "CXCL8"
+  ]
+}
